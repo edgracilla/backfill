@@ -13,32 +13,23 @@ class Backfill {
   }
 
   async expand(doc, expands) {
-
     const expandMap = mapExpand(this.refMap, expands)
     const expandKeys = Object.keys(expandMap)
 
-    console.log('bck: --a', expandMap)
-    console.log('bck: --b', expandKeys)
-    console.log('bck: --c', expands)
-    
     for (let i = 0; i < expandKeys.length; i++) {
       const path = expandKeys[i]
       const value = _get(doc, path)
-      const { ref:targetSvc, expand } = expandMap[path]
+      const { ref, expand } = expandMap[path]
 
       console.log('bck: b', path, value)
-      console.log('bck: c', targetSvc, expand)
-
+      console.log('bck: c', ref, expand)
       console.log('bck: d', value)
-      
-
-      
       
       
       try {
-        let ret = await this.broker.call(`${targetSvc}.read`, value, {}, { expand })
+        let ret = await this.broker.call(`${ref}.read`, value, {}, { expand })
         
-        // _set(doc, path, ret)
+        _set(doc, path, ret)
       } catch (err) {
         console.log('-- Backfill Err --')
         console.log(err)

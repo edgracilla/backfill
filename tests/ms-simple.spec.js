@@ -18,7 +18,7 @@ describe(`ms simple test`, () => {
   it(`should - expand 'createdBy' ref field in 'comment' document`, (done) => {
     // done()
 
-    commentsSvc.read('comment1', {}, { expand: 'createdByxxxxxxx'})
+    commentsSvc.read('comment1', {}, { expand: 'createdBy'})
       .then(ret => {
         console.log(ret)
       
