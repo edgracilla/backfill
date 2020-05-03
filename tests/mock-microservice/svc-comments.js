@@ -37,9 +37,8 @@ class Service {
     const { expand } = options
     const docs = this.data.filter(v => v._id === _id)
 
-    console.log('--a', options)
     if (!docs.length) {
-      return Promise.reject('Record not found!')
+      return Promise.reject('[comments] Record not found!')
     } else {
       let doc = _cloneDeep(docs[0])
 
@@ -50,7 +49,11 @@ class Service {
   }
 
   async search (options) {
-    
+    const { _id, expand } = options
+
+    return this.data.filter(item => {
+      return _id.includes(item._id)
+    })
   }
 }
 

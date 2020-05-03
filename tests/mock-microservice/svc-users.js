@@ -43,13 +43,17 @@ class Service {
   }
 
   async read (_id, meta, options) {
-    const docs = this.data
-      .filter(v => v._id === _id)
+    const { expand } = options
+    const docs = this.data.filter(v => v._id === _id)
 
     if (!docs.length) {
-      return Promise.reject('Record not found!')
+      return Promise.reject('[users] Record not found!')
     } else {
-      return Promise.resolve(_cloneDeep(docs[0]))
+      let doc = _cloneDeep(docs[0])
+
+      return expand
+        ? await this.backfill.expand(doc, expand)
+        : doc
     }
   }
 

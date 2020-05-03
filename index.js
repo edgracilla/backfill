@@ -17,19 +17,38 @@ class Backfill {
     const expandKeys = Object.keys(expandMap)
 
     for (let i = 0; i < expandKeys.length; i++) {
-      const path = expandKeys[i]
-      const value = _get(doc, path)
-      const { ref, expand } = expandMap[path]
+      let ePath = expandKeys[i]
+      const { ref, expand } = expandMap[ePath]
+      
+      console.log('--a', this.refMap)
+      console.log('--b', ref, expand)
 
-      console.log('bck: b', path, value)
-      console.log('bck: c', ref, expand)
-      console.log('bck: d', value)
-      
-      
+      const hasArray = !!ePath.match(/\\*/)
+      const isPlainArray = !!ePath.match(/\*$/)
+
+      if (isPlainArray) {
+        ePath = ePath.slice(0, -1)
+      }
+
+      let value = _get(doc, ePath)
+      console.log('--c', value)
+
+      // TODO: ArrayOfObject !!
+
       try {
-        let ret = await this.broker.call(`${ref}.read`, value, {}, { expand })
+        let ret
+
+        if (isPlainArray) {
+          ret = await this.broker.call(`${ref}.search`, {
+            _id: value,
+            listOnly: true,
+            expand
+          })
+        } else {
+          ret = await this.broker.call(`${ref}.read`, value, {}, { expand })
+        }
         
-        _set(doc, path, ret)
+        _set(doc, ePath, ret)
       } catch (err) {
         console.log('-- Backfill Err --')
         console.log(err)
