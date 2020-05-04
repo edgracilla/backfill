@@ -47,9 +47,11 @@ class Service {
     const docs = this.data.filter(v => v._id === _id)
 
     if (!docs.length) {
-      return Promise.reject('[users] Record not found!')
+      return Promise.reject('[users] Record not found!', _id)
     } else {
       let doc = _cloneDeep(docs[0])
+
+      // console.log('-x-', doc, expand)
 
       return expand
         ? await this.backfill.expand(doc, expand)
@@ -58,7 +60,19 @@ class Service {
   }
 
   async search (options) {
-    
+    const { _id, expand } = options
+
+    let docs = this.data.map(item => {
+      if (_id.includes(item._id)) {
+        return _cloneDeep(item)
+      }
+    })
+
+    docs = docs.filter(Boolean)
+
+    if (expand) await this.backfill.expands(docs, expand)
+
+    return docs
   }
 }
 

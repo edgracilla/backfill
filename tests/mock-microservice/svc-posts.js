@@ -54,13 +54,15 @@ class Service {
   async search (options) {
     const { _id, expand } = options
 
-    let docs = this.data.filter(item => {
-      return _id.includes(item._id)
+    let docs = this.data.map(item => {
+      if (_id.includes(item._id)) {
+        return _cloneDeep(item)
+      }
     })
-
-    if (!expand) return docs
     
-    await this.backfill.expands(docs, expand)
+    docs = docs.filter(Boolean)
+
+    if (expand) await this.backfill.expands(docs, expand)
 
     return docs
   }

@@ -41,13 +41,18 @@ class Backfill {
           
           const value = _get(doc, ePath)
 
+          // console.log('---', {
+          //   expandKeys, ePath, ref, expand, value,
+          //   isPlainArray, hasArray
+          // })
+
           const ret = isPlainArray
             ? await this.broker.call(`${ref}.search`, { _id: value, listOnly: true, expand })
             : await this.broker.call(`${ref}.read`, value, {}, { expand })
 
           _set(doc, ePath, ret)
         } catch (err) {
-          console.log(err)
+          console.log(err) // throw warn!
         }
       }
     }
