@@ -19,10 +19,6 @@ class Backfill {
     for (let i = 0; i < expandKeys.length; i++) {
       let ePath = expandKeys[i]
       const { ref, expand } = expandMap[ePath]
-      
-      // console.log('--a', this.refMap)
-      // console.log('--c', ePath, expandMap[ePath])
-      // console.log('--b', ref, expand)
 
       const hasArray = !!ePath.match(/\*/)
       const isPlainArray = !!ePath.match(/\*$/)
@@ -40,11 +36,6 @@ class Backfill {
             : ePath
           
           const value = _get(doc, ePath)
-
-          // console.log('---', {
-          //   expandKeys, ePath, ref, expand, value,
-          //   isPlainArray, hasArray
-          // })
 
           const ret = isPlainArray
             ? await this.broker.call(`${ref}.search`, { _id: value, listOnly: true, expand })
