@@ -20,43 +20,66 @@ class Backfill {
       let ePath = expandKeys[i]
       const { ref, expand } = expandMap[ePath]
       
-      console.log('--a', this.refMap)
-      console.log('--b', ref, expand)
+      // console.log('--a', this.refMap)
+      // console.log('--c', ePath, expandMap[ePath])
+      // console.log('--b', ref, expand)
 
-      const hasArray = !!ePath.match(/\\*/)
+      const hasArray = !!ePath.match(/\*/)
       const isPlainArray = !!ePath.match(/\*$/)
+      
+      if (hasArray && !isPlainArray) {
+        const [root, subKey] = ePath.split(/\*\.(.+)/)
+        const arrValues = _get(doc, root)
 
-      if (isPlainArray) {
-        ePath = ePath.slice(0, -1)
-      }
+        const curatedValues = await this.expandArrObj(arrValues, subKey, ref, expand)
+        _set(doc, root, curatedValues)
+      } else {
+        try {
+          ePath = isPlainArray
+            ? ePath.slice(0, -1)
+            : ePath
+          
+          const value = _get(doc, ePath)
 
-      let value = _get(doc, ePath)
-      console.log('--c', value)
+          const ret = isPlainArray
+            ? await this.broker.call(`${ref}.search`, { _id: value, listOnly: true, expand })
+            : await this.broker.call(`${ref}.read`, value, {}, { expand })
 
-      // TODO: ArrayOfObject !!
-
-      try {
-        let ret
-
-        if (isPlainArray) {
-          ret = await this.broker.call(`${ref}.search`, {
-            _id: value,
-            listOnly: true,
-            expand
-          })
-        } else {
-          ret = await this.broker.call(`${ref}.read`, value, {}, { expand })
+          _set(doc, ePath, ret)
+        } catch (err) {
+          console.log(err)
         }
-        
-        _set(doc, ePath, ret)
-      } catch (err) {
-        console.log('-- Backfill Err --')
-        console.log(err)
-        console.log('-- Backfill Err --')
       }
     }
 
     return doc
+  }
+
+  async expands (docs, expands) {
+    for (let i = 0; i < docs.length; i++) {
+      await this.expand(docs[i], expands)
+    }
+  }
+
+  async expandArrObj (values, subKey, ref, expand) {
+    const ids = values.map(item => _get(item, subKey))
+
+    try {
+      const ret = await this.broker
+        .call(`${ref}.search`, { _id: ids, listOnly: true, expand })
+      
+      const curated = values.map(vItem => {
+        for (let i = 0; i < ret.length; i++) {
+          if (_get(vItem, subKey) === ret[i]._id) {
+            return _set({}, subKey, ret[i])
+          }
+        }
+      })
+
+      return curated
+    } catch (err) {
+      console.log(err)
+    }
   }
 }
 

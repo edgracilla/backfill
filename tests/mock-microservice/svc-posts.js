@@ -52,7 +52,17 @@ class Service {
   }
 
   async search (options) {
+    const { _id, expand } = options
+
+    let docs = this.data.filter(item => {
+      return _id.includes(item._id)
+    })
+
+    if (!expand) return docs
     
+    await this.backfill.expands(docs, expand)
+
+    return docs
   }
 }
 
